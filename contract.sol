@@ -200,10 +200,27 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
     whenNotPaused
     returns (bool upkeepNeeded, bytes memory performData)
   {
-    address[] memory needsFunding = getUnderfundedAddresses();
-    upkeepNeeded = needsFunding.length > 0;
-    performData = abi.encode(needsFunding);
-    return (upkeepNeeded, performData);
+
+    performData;
+
+    // update player info if they change leagues
+    if (addr2Info[msg.sender].league == 1) {
+        if (addr2Info[msg.sender].balance < 100) {
+            return (true, abi.encode(msg.sender, "down"));
+        } else if (addr2Info[msg.sender].balance > 300) {
+            return (true, abi.encode(msg.sender, "up"));
+        }    
+    } else if (addr2Info[msg.sender].league == 2) {
+        if (addr2Info[msg.sender].balance < 300) {
+            return (true, abi.encode(msg.sender, "down"));
+        } else if (addr2Info[msg.sender].balance > 700) {
+            return (true, abi.encode(msg.sender, "up"));
+        }  
+    } else if (addr2Info[msg.sender].league == 3) {
+        if (addr2Info[msg.sender].balance < 700) {
+            return (true, abi.encode(msg.sender, "down"));
+        }
+    }
   }
 
   /**
@@ -212,7 +229,12 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
    */
   function performUpkeep(bytes calldata performData) external override onlyKeeperRegistry whenNotPaused {
     address[] memory needsFunding = abi.decode(performData, (address[]));
-    topUp(needsFunding);
+
+
+    // Kick the player out if their balance gets too low
+    if (addr2Info[msg.sender].balance < 10) {
+        addr2Info[msg.sender].stillPlaying = false;
+    } 
   }
 
   /**
