@@ -15,33 +15,33 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
  */
 contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterface {
 
-  // observed limit of 45K + 10k buffer
-  uint256 private constant MIN_GAS_FOR_TRANSFER = 55_000;
+    // observed limit of 45K + 10k buffer
+    uint256 private constant MIN_GAS_FOR_TRANSFER = 55_000;
 
-  event FundsAdded(uint256 amountAdded, uint256 newBalance, address sender);
-  event FundsWithdrawn(uint256 amountWithdrawn, address payee);
-  event TopUpSucceeded(address indexed recipient);
-  event TopUpFailed(address indexed recipient);
-  event KeeperRegistryAddressUpdated(address oldAddress, address newAddress);
-  event MinWaitPeriodUpdated(uint256 oldMinWaitPeriod, uint256 newMinWaitPeriod);
+    event FundsAdded(uint256 amountAdded, uint256 newBalance, address sender);
+    event FundsWithdrawn(uint256 amountWithdrawn, address payee);
+    event TopUpSucceeded(address indexed recipient);
+    event TopUpFailed(address indexed recipient);
+    event KeeperRegistryAddressUpdated(address oldAddress, address newAddress);
+    event MinWaitPeriodUpdated(uint256 oldMinWaitPeriod, uint256 newMinWaitPeriod);
 
-  error InvalidWatchList();
-  error OnlyKeeperRegistry();
-  error DuplicateAddress(address duplicate);
+    error InvalidWatchList();
+    error OnlyKeeperRegistry();
+    error DuplicateAddress(address duplicate);
 
-  struct Target {
-    bool isActive;
-    uint96 minBalanceWei;
-    uint96 topUpAmountWei;
-    uint56 lastTopUpTimestamp; // enough space for 2 trillion years
-  }
+    struct Target {
+        bool isActive;
+        uint96 minBalanceWei;
+        uint96 topUpAmountWei;
+        uint56 lastTopUpTimestamp; // enough space for 2 trillion years
+    }
 
-  address private s_keeperRegistryAddress;
-  uint256 private s_minWaitPeriodSeconds;
-  address[] private s_watchList;
-  mapping(address => Target) internal s_targets;
+    address private s_keeperRegistryAddress;
+    uint256 private s_minWaitPeriodSeconds;
+    address[] private s_watchList;
+    mapping(address => Target) internal s_targets;
 
-  // Struct containing player info
+    // Struct containing player info  
     struct playerInfo {
         bool stillPlaying;
         uint league;
@@ -50,10 +50,10 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
         int predictedAssetPrice;
         uint betAmount;
         int assetLatestPrice;
-  }
+    }
 
-  // Mapping of player addresses to their info stored in a struct
-  mapping(address => playerInfo) internal addr2Info;
+    // Mapping of player addresses to their info stored in a struct
+    mapping(address => playerInfo) internal addr2Info;
 
     // Needed for price feeds from ChainLink
     /**
@@ -92,43 +92,43 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
     assetAddresses["XRP"] = 0xc3E76f41CAbA4aB38F00c7255d4df663DA02A024;
   }
 
-  /**
-   * @notice Sets the list of addresses to watch and their funding parameters
-   * @param addresses the list of addresses to watch
-   * @param minBalancesWei the minimum balances for each address
-   * @param topUpAmountsWei the amount to top up each address
-   */
-  function setWatchList(
-    address[] calldata addresses,
-    uint96[] calldata minBalancesWei,
-    uint96[] calldata topUpAmountsWei
-  ) external onlyOwner {
-    if (addresses.length != minBalancesWei.length || addresses.length != topUpAmountsWei.length) {
-      revert InvalidWatchList();
-    }
-    address[] memory oldWatchList = s_watchList;
-    for (uint256 idx = 0; idx < oldWatchList.length; idx++) {
-      s_targets[oldWatchList[idx]].isActive = false;
-    }
-    for (uint256 idx = 0; idx < addresses.length; idx++) {
-      if (s_targets[addresses[idx]].isActive) {
-        revert DuplicateAddress(addresses[idx]);
-      }
-      if (addresses[idx] == address(0)) {
-        revert InvalidWatchList();
-      }
-      if (topUpAmountsWei[idx] == 0) {
-        revert InvalidWatchList();
-      }
-      s_targets[addresses[idx]] = Target({
-        isActive: true,
-        minBalanceWei: minBalancesWei[idx],
-        topUpAmountWei: topUpAmountsWei[idx],
-        lastTopUpTimestamp: 0
-      });
-    }
-    s_watchList = addresses;
-  }
+//   /**
+//    * @notice Sets the list of addresses to watch and their funding parameters
+//    * @param addresses the list of addresses to watch
+//    * @param minBalancesWei the minimum balances for each address
+//    * @param topUpAmountsWei the amount to top up each address
+//    */
+//   function setWatchList(
+//     address[] calldata addresses,
+//     uint96[] calldata minBalancesWei,
+//     uint96[] calldata topUpAmountsWei
+//   ) external onlyOwner {
+//     if (addresses.length != minBalancesWei.length || addresses.length != topUpAmountsWei.length) {
+//       revert InvalidWatchList();
+//     }
+//     address[] memory oldWatchList = s_watchList;
+//     for (uint256 idx = 0; idx < oldWatchList.length; idx++) {
+//       s_targets[oldWatchList[idx]].isActive = false;
+//     }
+//     for (uint256 idx = 0; idx < addresses.length; idx++) {
+//       if (s_targets[addresses[idx]].isActive) {
+//         revert DuplicateAddress(addresses[idx]);
+//       }
+//       if (addresses[idx] == address(0)) {
+//         revert InvalidWatchList();
+//       }
+//       if (topUpAmountsWei[idx] == 0) {
+//         revert InvalidWatchList();
+//       }
+//       s_targets[addresses[idx]] = Target({
+//         isActive: true,
+//         minBalanceWei: minBalancesWei[idx],
+//         topUpAmountWei: topUpAmountsWei[idx],
+//         lastTopUpTimestamp: 0
+//       });
+//     }
+//     s_watchList = addresses;
+//   }
 
 //   /**
 //    * @notice Gets a list of addresses that are under funded
@@ -236,16 +236,16 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
    * @notice Called by keeper to send funds to underfunded addresses
    * @param performData The abi encoded list of addresses to fund
    */
-  function performUpkeep(bytes calldata performData) external override onlyKeeperRegistry whenNotPaused return (address addr, string up_down) {
-    address[] memory needsFunding = abi.decode(performData, (address[]));
-    (upkeepNeeded, performData) = abi.decode(performData, )
+  function performUpkeep(bytes calldata performData) external override onlyKeeperRegistry whenNotPaused {
+    address addr;
+    string memory up_down;
+    (addr, up_down) = abi.decode(performData, (address, string));
+
 
     // Update player struct to reflect changed league
 
     // Kick the player out if their balance gets too low
-    if (addr2Info[msg.sender].balance < 10) {
-        addr2Info[msg.sender].stillPlaying = false;
-    } 
+
   }
 
   /**
