@@ -239,6 +239,7 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
   function performUpkeep(bytes calldata performData) external override onlyKeeperRegistry whenNotPaused {
     address[] memory needsFunding = abi.decode(performData, (address[]));
 
+    // Update player struct to reflect changed league
 
     // Kick the player out if their balance gets too low
     if (addr2Info[msg.sender].balance < 10) {
