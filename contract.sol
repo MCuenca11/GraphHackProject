@@ -11,7 +11,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 /**
  * @title The EthBalanceMonitor contract
- * @notice A keeper-compatible contract that monitors and funds eth addresses
+ * @notice A keeper-compatible contract that monitors and funds ETH addresses
  */
 contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterface {
 
