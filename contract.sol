@@ -11,7 +11,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 /**
  * @title The EthBalanceMonitor contract
- * @notice A keeper-compatible contract that monitors and funds ETH addresses
+ * @notice A keeper-compatible contract that monitors and funds eth addresses
  */
 contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterface {
 
@@ -43,6 +43,7 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
 
   // Struct containing player info
     struct playerInfo {
+        bool stillPlaying;
         uint league;
         uint balance;
         string assetName;
@@ -75,7 +76,7 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
 
     //***********************************************
     // If new user update mapping, else nothing?
-    playerInfo memory player = playerInfo({league:2, balance:100, assetName:"", predictedAssetPrice:0, betAmount:0, assetLatestPrice:0});
+    playerInfo memory player = playerInfo({stillPlaying: true, league:2, balance:100, assetName:"", predictedAssetPrice:0, betAmount:0, assetLatestPrice:0});
 
     // Chain Link Price feeds set up
     priceFeed = AggregatorV3Interface(address(0));
