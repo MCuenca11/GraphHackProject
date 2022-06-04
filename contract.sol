@@ -202,24 +202,33 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
   {
 
     performData;
+    upkeepNeeded = false;
 
     // update player info if they change leagues
     if (addr2Info[msg.sender].league == 1) {
         if (addr2Info[msg.sender].balance < 100) {
-            return (true, abi.encode(msg.sender, "down"));
+            upkeepNeeded = true;
+            return (upkeepNeeded, abi.encode(msg.sender, "down"));
         } else if (addr2Info[msg.sender].balance > 300) {
-            return (true, abi.encode(msg.sender, "up"));
+            upkeepNeeded = true;
+            return (upkeepNeeded, abi.encode(msg.sender, "up"));
         }    
     } else if (addr2Info[msg.sender].league == 2) {
         if (addr2Info[msg.sender].balance < 300) {
-            return (true, abi.encode(msg.sender, "down"));
+            upkeepNeeded = true;
+            return (upkeepNeeded, abi.encode(msg.sender, "down"));
         } else if (addr2Info[msg.sender].balance > 700) {
-            return (true, abi.encode(msg.sender, "up"));
+            upkeepNeeded = true;
+            return (upkeepNeeded, abi.encode(msg.sender, "up"));
         }  
     } else if (addr2Info[msg.sender].league == 3) {
         if (addr2Info[msg.sender].balance < 700) {
-            return (true, abi.encode(msg.sender, "down"));
+            upkeepNeeded = true;
+            return (upkeepNeeded, abi.encode(msg.sender, "down"));
         }
+    // Remain in the same league    
+    } else {
+        return (upkeepNeeded, performData);
     }
   }
 
