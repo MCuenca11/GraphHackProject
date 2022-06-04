@@ -339,4 +339,51 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
         // converts price to an int
         return price/10**8;
     }
+    
+    /**
+    * finds the absolute value of the truncated percent difference between 2 values
+    */
+    function percentDifference(int _value1, int _value2) private returns(int) {
+        int valuesPercentDifference = ((_value1 - _value2)*100)/(_value2);
+        valuesPercentDifference = valuesPercentDifference >= 0 ? valuesPercentDifference : -valuesPercentDifference;
+        return valuesPercentDifference;
+    }
+
+    /**
+    * Calculates prize
+    */
+    function calculatePrize() private {
+        address player_address = msg.sender;
+        int assetPrice = addr2Info[player_address].assetLatestPrice;
+        uint user_league = addr2Info[player_address].league;
+        uint user_funds = addr2Info[player_address].balance;
+        uint betAmount = addr2Info[player_address].betAmount;
+        int prediction = addr2Info[player_address].predictedAssetPrice;
+        int predictionDifference = percentDifference(int(prediction), int(assetPrice));
+
+
+        if (user_league == 1) {
+            require(betAmount >= user_funds/5);
+            if (predictionDifference <= 5) {
+                user_funds += betAmount*2;
+            } else {
+                user_funds -= betAmount;
+            }
+        } else if (user_league == 2) {
+            require(betAmount >= user_funds/10);
+            if (predictionDifference <= 5) {
+                user_funds += betAmount*3/2;
+            } else {
+                user_funds -= betAmount;
+            }
+        } else if (user_league == 3) {
+            require(betAmount >= user_funds/20);
+            if (predictionDifference <= 5) {
+                user_funds += betAmount;
+            } else {
+                user_funds -= betAmount;
+            }
+        }
+        addr2Info[msg.sender].balance = user_funds;
+    }
 }
