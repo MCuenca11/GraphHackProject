@@ -130,64 +130,64 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
     s_watchList = addresses;
   }
 
-  /**
-   * @notice Gets a list of addresses that are under funded
-   * @return list of addresses that are underfunded
-   */
-  function getUnderfundedAddresses() public view returns (address[] memory) {
-    address[] memory watchList = s_watchList;
-    address[] memory needsFunding = new address[](watchList.length);
-    uint256 count = 0;
-    uint256 minWaitPeriod = s_minWaitPeriodSeconds;
-    uint256 balance = address(this).balance;
-    Target memory target;
-    for (uint256 idx = 0; idx < watchList.length; idx++) {
-      target = s_targets[watchList[idx]];
-      if (
-        target.lastTopUpTimestamp + minWaitPeriod <= block.timestamp &&
-        balance >= target.topUpAmountWei &&
-        watchList[idx].balance < target.minBalanceWei
-      ) {
-        needsFunding[count] = watchList[idx];
-        count++;
-        balance -= target.topUpAmountWei;
-      }
-    }
-    if (count != watchList.length) {
-      assembly {
-        mstore(needsFunding, count)
-      }
-    }
-    return needsFunding;
-  }
+//   /**
+//    * @notice Gets a list of addresses that are under funded
+//    * @return list of addresses that are underfunded
+//    */
+//   function getUnderfundedAddresses() public view returns (address[] memory) {
+//     address[] memory watchList = s_watchList;
+//     address[] memory needsFunding = new address[](watchList.length);
+//     uint256 count = 0;
+//     uint256 minWaitPeriod = s_minWaitPeriodSeconds;
+//     uint256 balance = address(this).balance;
+//     Target memory target;
+//     for (uint256 idx = 0; idx < watchList.length; idx++) {
+//       target = s_targets[watchList[idx]];
+//       if (
+//         target.lastTopUpTimestamp + minWaitPeriod <= block.timestamp &&
+//         balance >= target.topUpAmountWei &&
+//         watchList[idx].balance < target.minBalanceWei
+//       ) {
+//         needsFunding[count] = watchList[idx];
+//         count++;
+//         balance -= target.topUpAmountWei;
+//       }
+//     }
+//     if (count != watchList.length) {
+//       assembly {
+//         mstore(needsFunding, count)
+//       }
+//     }
+//     return needsFunding;
+//   }
 
-  /**
-   * @notice Send funds to the addresses provided
-   * @param needsFunding the list of addresses to fund (addresses must be pre-approved)
-   */
-  function topUp(address[] memory needsFunding) public whenNotPaused {
-    uint256 minWaitPeriodSeconds = s_minWaitPeriodSeconds;
-    Target memory target;
-    for (uint256 idx = 0; idx < needsFunding.length; idx++) {
-      target = s_targets[needsFunding[idx]];
-      if (
-        target.isActive &&
-        target.lastTopUpTimestamp + minWaitPeriodSeconds <= block.timestamp &&
-        needsFunding[idx].balance < target.minBalanceWei
-      ) {
-        bool success = payable(needsFunding[idx]).send(target.topUpAmountWei);
-        if (success) {
-          s_targets[needsFunding[idx]].lastTopUpTimestamp = uint56(block.timestamp);
-          emit TopUpSucceeded(needsFunding[idx]);
-        } else {
-          emit TopUpFailed(needsFunding[idx]);
-        }
-      }
-      if (gasleft() < MIN_GAS_FOR_TRANSFER) {
-        return;
-      }
-    }
-  }
+//   /**
+//    * @notice Send funds to the addresses provided
+//    * @param needsFunding the list of addresses to fund (addresses must be pre-approved)
+//    */
+//   function topUp(address[] memory needsFunding) public whenNotPaused {
+//     uint256 minWaitPeriodSeconds = s_minWaitPeriodSeconds;
+//     Target memory target;
+//     for (uint256 idx = 0; idx < needsFunding.length; idx++) {
+//       target = s_targets[needsFunding[idx]];
+//       if (
+//         target.isActive &&
+//         target.lastTopUpTimestamp + minWaitPeriodSeconds <= block.timestamp &&
+//         needsFunding[idx].balance < target.minBalanceWei
+//       ) {
+//         bool success = payable(needsFunding[idx]).send(target.topUpAmountWei);
+//         if (success) {
+//           s_targets[needsFunding[idx]].lastTopUpTimestamp = uint56(block.timestamp);
+//           emit TopUpSucceeded(needsFunding[idx]);
+//         } else {
+//           emit TopUpFailed(needsFunding[idx]);
+//         }
+//       }
+//       if (gasleft() < MIN_GAS_FOR_TRANSFER) {
+//         return;
+//       }
+//     }
+//   }
 
   /**
    * @notice Get list of addresses that are underfunded and return keeper-compatible payload
@@ -205,7 +205,7 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
     upkeepNeeded = false;
 
     // update player info if they change leagues
-    if (addr2Info[msg.sender].league == 1) {
+    if (addr2Info[msg.sender].league == 3) {
         if (addr2Info[msg.sender].balance < 100) {
             upkeepNeeded = true;
             return (upkeepNeeded, abi.encode(msg.sender, "down"));
@@ -221,7 +221,7 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
             upkeepNeeded = true;
             return (upkeepNeeded, abi.encode(msg.sender, "up"));
         }  
-    } else if (addr2Info[msg.sender].league == 3) {
+    } else if (addr2Info[msg.sender].league == 1) {
         if (addr2Info[msg.sender].balance < 700) {
             upkeepNeeded = true;
             return (upkeepNeeded, abi.encode(msg.sender, "down"));
@@ -236,8 +236,9 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
    * @notice Called by keeper to send funds to underfunded addresses
    * @param performData The abi encoded list of addresses to fund
    */
-  function performUpkeep(bytes calldata performData) external override onlyKeeperRegistry whenNotPaused {
+  function performUpkeep(bytes calldata performData) external override onlyKeeperRegistry whenNotPaused return (address addr, string up_down) {
     address[] memory needsFunding = abi.decode(performData, (address[]));
+    (upkeepNeeded, performData) = abi.decode(performData, )
 
     // Update player struct to reflect changed league
 
