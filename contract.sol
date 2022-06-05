@@ -5,6 +5,7 @@ pragma solidity ^0.8.7;
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 // import statement for chainlink price feed
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -51,10 +52,9 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
         uint betAmount;
         int assetLatestPrice;
     }
-
+  
     // Mapping of player addresses to their info stored in a struct
     mapping(address => playerInfo) internal addr2Info;
-
     // Needed for price feeds from ChainLink
     /**
      * Live Price Feed
@@ -76,8 +76,11 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
 
     //***********************************************
     // If new user update mapping, else nothing?
-    playerInfo memory player = playerInfo({isActive: true, league:2, balance:100, assetName:"", predictedAssetPrice:0, betAmount:0, assetLatestPrice:0});
-
+    //playerInfo memory player = playerInfo({isActive: true, league:2, balance:500, assetName:"", predictedAssetPrice:0, betAmount:0, assetLatestPrice:0});
+    playerInfo storage user = addr2Info[msg.sender];
+    user.balance = 500;
+    user.isActive = true;
+    user.league = 2;
     // Chain Link Price feeds set up
     priceFeed = AggregatorV3Interface(address(0));
     assetAddresses["ETH"] = 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
@@ -252,6 +255,36 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
         addr2Info[msg.sender].league += 1;
     }
   }
+
+
+  /**
+    struct playerInfo {
+        bool isActive;
+        uint league;
+        uint balance;
+        string assetName;
+        int predictedAssetPrice;
+        uint betAmount;
+        int assetLatestPrice;
+    }
+            address player_address = msg.sender;
+        int assetPrice = addr2Info[player_address].assetLatestPrice;
+        uint user_league = addr2Info[player_address].league;
+        uint user_funds = addr2Info[player_address].balance;
+        uint betAmount = addr2Info[player_address].betAmount;
+        int prediction = addr2Info[player_address].predictedAssetPrice;
+        int predictionDifference = percentDifference(int(prediction), int(assetPrice));
+  */
+
+
+  function getLeague() external view returns (uint current_league) {
+    return addr2Info[msg.sender].league;
+  }
+
+  function getPlayerDetails() external view returns (bool activity, uint leagues, uint balances, string memory asset, int prediction, uint bet, int assetPrice) {
+    return (addr2Info[msg.sender].isActive, addr2Info[msg.sender].league, addr2Info[msg.sender].balance, addr2Info[msg.sender].assetName, addr2Info[msg.sender].predictedAssetPrice, addr2Info[msg.sender].betAmount, addr2Info[msg.sender].assetLatestPrice);
+  }
+//Strings.toString(myUINT)
 
   /**
    * @notice Withdraws the contract balance
