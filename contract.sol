@@ -43,7 +43,7 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
 
     // Struct containing player info  
     struct playerInfo {
-        bool stillPlaying;
+        bool isActive;
         uint league;
         uint balance;
         string assetName;
@@ -76,7 +76,7 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
 
     //***********************************************
     // If new user update mapping, else nothing?
-    playerInfo memory player = playerInfo({stillPlaying: true, league:2, balance:100, assetName:"", predictedAssetPrice:0, betAmount:0, assetLatestPrice:0});
+    playerInfo memory player = playerInfo({isActive: true, league:2, balance:100, assetName:"", predictedAssetPrice:0, betAmount:0, assetLatestPrice:0});
 
     // Chain Link Price feeds set up
     priceFeed = AggregatorV3Interface(address(0));
@@ -241,11 +241,17 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
     string memory up_down;
     (addr, up_down) = abi.decode(performData, (address, string));
 
+    // Kick the player out if their balance gets too low
+    if (up_down == "down" && (addr2Info[msg.sender].league == 3)) {
+        addr2Info[msg.sender].isActive = false;
+    }
 
     // Update player struct to reflect changed league
-
-    // Kick the player out if their balance gets too low
-
+    if (up_down == "up") {
+        addr2Info[msg.sender].league -= 1;
+    } else {
+        addr2Info[msg.sender].league += 1;
+    }
   }
 
   /**
