@@ -242,12 +242,11 @@ contract EthBalanceMonitor is ConfirmedOwner, Pausable, KeeperCompatibleInterfac
     (addr, up_down) = abi.decode(performData, (address, string));
 
     // Kick the player out if their balance gets too low
-    if (up_down == "down" && (addr2Info[msg.sender].league == 3)) {
+    if (keccak256(abi.encodePacked((up_down))) == keccak256(abi.encodePacked(("down"))) && (addr2Info[msg.sender].league == 3)) {
         addr2Info[msg.sender].isActive = false;
     }
-
     // Update player struct to reflect changed league
-    if (up_down == "up") {
+    if (keccak256(abi.encodePacked((up_down))) == keccak256(abi.encodePacked(("up")))) {
         addr2Info[msg.sender].league -= 1;
     } else {
         addr2Info[msg.sender].league += 1;
